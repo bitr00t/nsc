@@ -11,8 +11,10 @@
 
 pub mod modulus;
 pub mod ntt;
+pub mod params;
 pub mod ring;
 pub mod rng;
 
 pub use modulus::Modulus;
+pub use params::{ParamError, Params};
 pub use rng::Rng;

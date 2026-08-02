@@ -8,3 +8,8 @@
 //!
 //! Build the bug before building the thing that prevents it. Everything the
 //! later phases add gets tested against that one artefact.
+
+pub mod modulus;
+pub mod ring;
+
+pub use modulus::Modulus;

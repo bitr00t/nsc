@@ -10,6 +10,7 @@
 //! later phases add gets tested against that one artefact.
 
 pub mod modulus;
+pub mod ntt;
 pub mod ring;
 
 pub use modulus::Modulus;

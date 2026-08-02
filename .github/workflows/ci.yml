@@ -1,0 +1,106 @@
+name: CI
+
+# Runs on every pull request and on pushes to main. Branch protection should
+# require these checks, so that the only way onto main is through a green PR.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# A new push to a PR cancels the previous run: nobody needs CI results for a
+# commit that has already been superseded.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  # Warnings fail the build. The alternative is a repository that accumulates
+  # them until nobody reads the output, at which point the tooling is
+  # decorative.
+  RUSTFLAGS: "-D warnings"
+
+jobs:
+  format:
+    name: rustfmt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check formatting
+        run: cargo fmt --all --check
+        working-directory: backend
+
+  clippy:
+    name: clippy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: backend
+      - name: Lint
+        run: cargo clippy --all-targets --all-features -- -D warnings
+        working-directory: backend
+
+  test:
+    name: tests (${{ matrix.profile }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Both profiles, deliberately. Debug builds panic on integer overflow
+        # where release builds wrap silently — and this project's whole subject
+        # is arithmetic that goes wrong without saying so. A test suite that
+        # only ran in release could miss exactly the class of bug we care about.
+        # Release is still needed because the NTT-free reference paths are
+        # quadratic and slow when unoptimised.
+        profile: [debug, release]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: backend
+      - name: Run tests
+        run: |
+          if [ "${{ matrix.profile }}" = "release" ]; then
+            cargo test --release --all
+          else
+            cargo test --all
+          fi
+        working-directory: backend
+
+  depth-cliff:
+    name: the depth cliff still falls
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: backend
+      # The project's recurring artefact (docs/ROADMAP.md §4). It is already
+      # covered by the test suite, but it gets its own job so that the failure
+      # is legible on the PR page: if this goes red, the thing the whole project
+      # is about has changed, and that should never be buried in a test log.
+      - name: Run the demo
+        run: cargo run --release --bin depth-cliff
+        working-directory: backend
+      - name: Assert the cliff is where it should be
+        run: cargo test --release --test depth_cliff_tests
+        working-directory: backend
+
+  docs:
+    name: rustdoc
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: backend
+      # Much of the reasoning in this project lives in doc comments — the noise
+      # module's warning about invariant 2, for instance. Broken intra-doc links
+      # mean that reasoning has quietly come apart from the code it describes.
+      - name: Build documentation
+        run: cargo doc --no-deps --all-features
+        working-directory: backend
+        env:
+          RUSTDOCFLAGS: "-D warnings"

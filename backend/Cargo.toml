@@ -1,0 +1,3 @@
+[workspace]
+members = ["nsc-core"]
+resolver = "2"

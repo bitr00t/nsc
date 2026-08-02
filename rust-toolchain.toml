@@ -1,0 +1,6 @@
+# Pinned so that CI, contributors and the author all see the same warnings.
+# rustfmt and clippy are part of the pin: an unpinned toolchain means lint
+# results that differ between machines, which turns CI into noise.
+[toolchain]
+channel = "1.85.0"
+components = ["rustfmt", "clippy"]

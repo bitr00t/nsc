@@ -1,0 +1,5 @@
+backend/target/
+compiler/build/
+*.o
+*.hi
+.DS_Store

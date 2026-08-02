@@ -1,0 +1,7 @@
+[package]
+name = "nsc-core"
+version = "0.1.0"
+edition = "2021"
+description = "Ring arithmetic, NTT, RLWE and textbook BFV — the cryptographic layer of nsc. No dependencies."
+
+[dependencies]

@@ -12,5 +12,7 @@
 pub mod modulus;
 pub mod ntt;
 pub mod ring;
+pub mod rng;
 
 pub use modulus::Modulus;
+pub use rng::Rng;

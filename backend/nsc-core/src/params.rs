@@ -188,5 +188,22 @@ fn mod_pow(mut base: u64, mut exponent: u64, m: u64) -> u64 {
 }
 
 impl Params {
-    
+    /// The phase-0 parameter set.
+    ///
+    /// `N = 256`, `q` the smallest NTT-friendly prime above `2^58`, `t = 256`,
+    /// relinearisation base `2^10`. Budget: 49 bits.
+    ///
+    /// `q` cannot grow much beyond this. The BFV tensor product is computed over
+    /// the integers and its coefficients are bounded by `N·(q/2)²`, which here is
+    /// already `≈ 2^123` — close enough to `i128` that the next step up would
+    /// overflow. That ceiling is the reason a real implementation needs RNS, and
+    /// it is the phase-1 motivation written into a constant.
+    ///
+    /// **Not a secure parameter set.** `N = 256` is far below anything with a
+    /// meaningful security level. Phase 0 is about the arithmetic and the failure
+    /// mode; see `docs/ROADMAP.md` §8.
+    pub fn phase0() -> Params {
+        Params::new(256, 288_230_376_151_736_833, 256, 1 << 10)
+            .expect("the phase-0 parameter set must be valid")
+    }
 }
